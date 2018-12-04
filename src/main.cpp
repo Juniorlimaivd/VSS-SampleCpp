@@ -10,6 +10,8 @@
 #include <Communications/CommandSender.h>
 #include <Communications/DebugSender.h>
 #include "cstdlib"
+#include <getopt.h>
+#include <string>
 
 using namespace vss;
 
@@ -25,23 +27,68 @@ void send_debug();
 int main(int argc, char** argv){
     srand(time(NULL));
 
-    stateReceiver = new StateReceiver();
-    commandSender = new CommandSender();
-    debugSender = new DebugSender();
+    TeamType team = TeamType::Yellow;
 
-    stateReceiver->createSocket();
-    commandSender->createSocket(TeamType::Yellow);
-    debugSender->createSocket(TeamType::Yellow);
+    int opt, opt_index;
 
-    while(true){
-        state = stateReceiver->receiveState(FieldTransformationType::None);
-        std::cout << state << std::endl;
+    static struct option long_options[]{
+        {"team", required_argument, 0, 't'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}
+    };
 
-        send_commands();
-        send_debug();
-    }
+        while ((opt = getopt_long(argc, argv, "t:h", long_options, &opt_index)) != -1)
+        {
+            switch (opt) {
+                case 't':
+                {
+                    std::string arg = optarg;
+                    if (arg == "blue") team = TeamType::Blue;
+                    else if (arg == "yellow") team = TeamType::Yellow;
+                    else {
+                        printf("Invalid team.\n");
+                        exit(-1);
+                    }
 
-    return 0;
+                    break;
+                }
+                case 'h':
+                {
+                    printf("Usage: $ vss-sample [options]\n");
+                    printf("-t, --team [team-type]\n\t[blue]\n\t[yellow]\n"
+                           "-h, --help\n");
+                    exit(0);
+                    break;
+                }
+                case '?': {
+                    printf("Invalid argument. Please try again.\n");
+                    exit(-1);
+                    break;
+                }
+                default:{
+                    abort();
+                }
+            }
+        }
+
+        stateReceiver = new StateReceiver();
+        commandSender = new CommandSender();
+        debugSender = new DebugSender();
+
+        stateReceiver->createSocket();
+        commandSender->createSocket(team);
+        debugSender->createSocket(team);
+
+        while (true)
+        {
+            state = stateReceiver->receiveState(FieldTransformationType::None);
+            std::cout << state << std::endl;
+
+            send_commands();
+            send_debug();
+        }
+
+        return 0;
 }
 
 void send_commands(){
@@ -72,5 +119,5 @@ void send_debug(){
         path.points.push_back(Point(85 + rand()%20, 65 + rand()%20));
     }
 
-    debugSender->sendDebug(debug);
+    //debugSender->sendDebug(debug);
 }
