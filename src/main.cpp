@@ -12,6 +12,9 @@
 #include "cstdlib"
 #include <getopt.h>
 #include <string>
+#include <getopt.h>
+#include <string>
+#include "goalkeeper_strategy.hpp"
 
 using namespace vss;
 
@@ -21,7 +24,7 @@ IDebugSender *debugSender;
 
 State state;
 
-void send_commands();
+void send_commands(WheelsCommand gkCommand);
 void send_debug();
 
 int main(int argc, char** argv){
@@ -71,6 +74,8 @@ int main(int argc, char** argv){
             }
         }
 
+        GoalKeeperStrategy gk(team);
+
         stateReceiver = new StateReceiver();
         commandSender = new CommandSender();
         debugSender = new DebugSender();
@@ -82,21 +87,26 @@ int main(int argc, char** argv){
         while (true)
         {
             state = stateReceiver->receiveState(FieldTransformationType::None);
+
+            WheelsCommand gk_command = gk.update(state, 0);
+            
             std::cout << state << std::endl;
 
-            send_commands();
+            send_commands(gk_command);
             send_debug();
         }
 
         return 0;
 }
 
-void send_commands(){
+void send_commands(WheelsCommand gkCommand){
     Command command;
 
     for(int i = 0 ; i < 3 ; i++){
         command.commands.push_back(WheelsCommand(10, -10));
     }
+
+    command.commands[0] = gkCommand;
 
     commandSender->sendCommand(command);
 }
