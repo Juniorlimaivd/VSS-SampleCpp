@@ -14,7 +14,7 @@
 #include <string>
 #include <getopt.h>
 #include <string>
-#include "goalkeeper_strategy.hpp"
+#include "generic_player.hpp"
 
 using namespace vss;
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv){
             }
         }
 
-        GoalKeeperStrategy gk(team);
+        GenericPlayer player1(team);
 
         stateReceiver = new StateReceiver();
         commandSender = new CommandSender();
@@ -88,25 +88,25 @@ int main(int argc, char** argv){
         {
             state = stateReceiver->receiveState(FieldTransformationType::None);
 
-            WheelsCommand gk_command = gk.update(state, 0);
-            
+            WheelsCommand player1_command = player1.update(state, 0);
+
             std::cout << state << std::endl;
 
-            send_commands(gk_command);
-            send_debug();
+            send_commands(player1_command);
+            //send_debug();
         }
 
         return 0;
 }
 
-void send_commands(WheelsCommand gkCommand){
+void send_commands(WheelsCommand player1Command){
     Command command;
 
     for(int i = 0 ; i < 3 ; i++){
         command.commands.push_back(WheelsCommand(10, -10));
     }
 
-    command.commands[0] = gkCommand;
+    command.commands[0] = player1Command;
 
     commandSender->sendCommand(command);
 }
@@ -129,5 +129,5 @@ void send_debug(){
         path.points.push_back(Point(85 + rand()%20, 65 + rand()%20));
     }
 
-    //debugSender->sendDebug(debug);
+    debugSender->sendDebug(debug);
 }
